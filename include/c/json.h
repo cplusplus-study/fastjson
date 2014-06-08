@@ -34,6 +34,7 @@ enum {
 };
 
 #define JSON_CONTENT_TYPE "application/json"
+#define JSONPARSE_MAX_DEPTH 256
 
 #ifdef __cplusplus
 }

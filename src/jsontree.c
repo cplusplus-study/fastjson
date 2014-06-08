@@ -2,8 +2,8 @@
  * JSON output generation
  */
 
-#include "jsontree.h"
-#include "jsonparse.h"
+#include <c/jsontree.h>
+#include <c/jsonparse.h>
 #include <string.h>
 
 #define DEBUG 0

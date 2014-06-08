@@ -1,12 +1,18 @@
-#include "jsonparse.h"
+#include <c/jsonparse.h>
 #include <stdlib.h>
 #include <string.h>
 
 /*--------------------------------------------------------------------*/
+static void clear_value(struct jsonparse_state*state){
+    state->vtype = 0;
+    state->vlen = 0;
+    state->vstart = 0;
+}
+/*--------------------------------------------------------------------*/
 static int push(struct jsonparse_state *state, char c) {
     state->stack[state->depth] = c;
     state->depth++;
-    state->vtype = 0;
+    clear_value(state);
     return state->depth < JSONPARSE_MAX_DEPTH;
 }
 /*--------------------------------------------------------------------*/
@@ -45,6 +51,18 @@ static void atomic(struct jsonparse_state *state, char type) {
         /* need to back one step since first char is already gone */
         state->vstart--;
         state->vlen = state->pos - state->vstart;
+    } else if(type == JSON_TYPE_NULL){
+        state->vstart--;
+        state->vlen = 4;
+        state->pos +=3;
+    } else if(type == JSON_TYPE_TRUE){
+        state->vstart--;
+        state->vlen = 4;
+        state->pos +=3;
+    } else if(type == JSON_TYPE_FALSE){
+        state->vstart--;
+        state->vlen = 5;
+        state->pos +=4;
     }
     /* no other types for now... */
 }
@@ -53,7 +71,7 @@ static void skip_ws(struct jsonparse_state *state) {
     char c;
 
     while(state->pos < state->len &&
-            ((c = state->json[state->pos]) == ' ' || c == '\n')) {
+            ((c = state->json[state->pos]) == ' ' || c == '\n' || c == '\r' || c == '\t')) {
         state->pos++;
     }
 }
@@ -127,20 +145,55 @@ int jsonparse_next(struct jsonparse_state *state) {
             }
             return c;
         case '[':
-            if(s == '{' || s == '[' || s == ':') {
-                push(state, c);
-            } else {
-                state->error = JSON_ERROR_UNEXPECTED_ARRAY;
+            push(state, c);
+            return c;
+        case 'n':
+            if((s == ':' || s == '[') && strncmp("null", state->json + state->pos -1, 4) == 0) {
+                atomic(state, JSON_TYPE_NULL);
+                return JSON_TYPE_NULL;
+            }else{
+                state->error = JSON_ERROR_SYNTAX;
                 return JSON_TYPE_ERROR;
             }
-            return c;
-        default:
-            if(s == ':' || s == '[') {
-                if(c <= '9' && c >= '0') {
-                    atomic(state, JSON_TYPE_NUMBER);
-                    return JSON_TYPE_NUMBER;
-                }
+            break;
+        case 't':
+            if((s == ':' || s == '[') && strncmp("true", state->json + state->pos -1, 4) == 0) {
+                atomic(state, JSON_TYPE_TRUE);
+                return JSON_TYPE_TRUE;
+            }else{
+                state->error = JSON_ERROR_SYNTAX;
+                return JSON_TYPE_ERROR;
             }
+            break;
+        case 'f':
+            if((s == ':' || s == '[') && strncmp("false", state->json + state->pos -1, 5) == 0) {
+                atomic(state, JSON_TYPE_FALSE);
+                return JSON_TYPE_FALSE;
+            }else {
+                state->error = JSON_ERROR_SYNTAX;
+                return JSON_TYPE_ERROR;
+            }
+            break;
+        case '-':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            if(s == ':' || s == '[') {
+                atomic(state, JSON_TYPE_NUMBER);
+                return JSON_TYPE_NUMBER;
+            }
+            state->error = JSON_ERROR_SYNTAX;
+            return JSON_TYPE_ERROR;
+        default:
+            state->error = JSON_ERROR_SYNTAX;
+            return JSON_TYPE_ERROR;
     }
     return 0;
 }

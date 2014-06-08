@@ -4,4 +4,5 @@ project :
 #<cflags>-std=c99
 		;
 
-lib fastjson : [ glob *.c ] : <cflags>-std=c99 ;
+lib fastjson4c : [ glob *.c ] : <cflags>-std=c99 ;
+lib fastjson4cxx : [ glob *.cpp ] .//fastjson4c : <cflags>-std=c++11 <cxxflags>-std=c++11 ;

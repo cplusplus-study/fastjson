@@ -7,11 +7,6 @@ extern "C"{
 
 #include "json.h"
 
-#ifdef JSONPARSE_CONF_MAX_DEPTH
-#define JSONPARSE_MAX_DEPTH JSONPARSE_CONF_MAX_DEPTH
-#else
-#define JSONPARSE_MAX_DEPTH 32
-#endif
 
 struct jsonparse_state {
   const char *json;
