@@ -65,9 +65,6 @@ public:
     bool is_array()  const { return type() == ARRAY; }
     bool is_object() const { return type() == OBJECT; }
 
-    // Return the enclosed value if this is a number, 0 otherwise. Note that json11 does not
-    // distinguish between integer and non-integer numbers - number_value() and int_value()
-    // can both be applied to a NUMBER-typed object.
     double number_value() const;
     int int_value() const;
 

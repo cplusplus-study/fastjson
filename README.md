@@ -22,10 +22,13 @@ const std::string json_str = R"({
 std::string err;
 xusd::Json json = xusd::Json::parse(json_str, err);
 
+//===================================================
+
 json["core"]["editor"] ==> "vim"
 json["user"]["email"] ==> "xyz_kankan@126.com"
 ```
 ### 2. error log
+
 ```cpp
 const std::string json_str = R"({
 "core": { "editor": "vim", "quotepath":false },
@@ -57,6 +60,7 @@ std::cout<<err<<std::endl;
 ```
 
 ### 3. easy initializer and serialization
+
 ```cpp
 using namespace xusd;
 Json my_json = Json::object {
@@ -74,7 +78,7 @@ std::string json_str = my_json.dump();
 
 ### 4. support user-defined type
 
-```
+```cpp
 class Point {
 public:
     int x;
@@ -101,7 +105,7 @@ std::string str = json[0]["k"].string_value();
 
 ### 5. support c/c++ language
 
-```
+```cpp
 #include <c/jsonparse.h> // ==> c lang
 #include <cpp/json.hpp> // ==> c++ lang
 ```
