@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
+
 #include "json.h"
 
 #ifdef JSONPARSE_CONF_MAX_DEPTH
@@ -34,15 +35,13 @@ struct jsonparse_state {
  *             This function initializes a JSON parser state for
  *             parsing a string as JSON.
  */
-void jsonparse_setup(struct jsonparse_state *state, const char *json,
-                     int len);
+void jsonparse_setup(struct jsonparse_state *state, const char *json, int len);
 
 /* move to next JSON element */
 int jsonparse_next(struct jsonparse_state *state);
 
 /* copy the current JSON value into the specified buffer */
-int jsonparse_copy_value(struct jsonparse_state *state, char *buf,
-                         int buf_size);
+int jsonparse_copy_value(struct jsonparse_state *state, char *buf, int buf_size);
 
 /* get the current JSON value parsed as an int */
 int jsonparse_get_value_as_int(struct jsonparse_state *state);

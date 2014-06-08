@@ -1,1 +1,6 @@
-exe test1 : test1.c ../src//fastjson ;
+project :
+		requirements
+			<include>../include
+			<cxxflags>-std=c++11
+		;
+exe test1 : test1.cpp ../src//fastjson ../lib//gtest ;

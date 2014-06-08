@@ -3,6 +3,7 @@ project
 		requirements
 		<include>./include <threading>multi
 		<toolset>clang:<cxxflags>-fcolor-diagnostics
+		<cxxflags>-std=c++11
 	:
 		default-build
 		<link>static
