@@ -292,12 +292,60 @@ public:
 
 
     bool isFailed(){
-        return __state.error != 0;
+        return __state.error != JSON_ERROR_OK;
     }
 
-    string failMsg(){
+    string& failMsg(string &err){
+        err.clear();
+        switch(__state.error){
+            case JSON_ERROR_OK:
+                break;
+            case JSON_ERROR_SYNTAX:
+                err = "syntax error near: \n";
+                break;
+            case JSON_ERROR_UNEXPECTED_ARRAY:
+                err = "unexpected array near: \n";
+                break;
+            case JSON_ERROR_UNEXPECTED_END_OF_ARRAY:
+                err = "unexpected end of array near: \n";
+                break;
+            case JSON_ERROR_UNEXPECTED_OBJECT:
+                err = "unexpected object near: \n";
+                break;
+            case JSON_ERROR_UNEXPECTED_STRING:
+                err = "unexpected string near: \n";
+                break;
+            case JSON_ERROR_MAXDEPTH:
+                err = "unexpected string near: \n";
+                break;
+        }
 
-        return "";
+        const char* s = __state.json + __state.pos;
+        const char* e = __state.pos + 64 < __state.len ? __state.json + __state.pos + 64: __state.json + __state.len;
+        for(int i =0; i<64; ++i){
+            s = __state.json + __state.pos - i;
+            if((s <= __state.json)){
+                break;
+            }
+            if(*s == '\n'){
+                if(__state.json + __state.pos - s > 32){
+                    break;
+                }
+            }
+        }
+        for(int i =0; i<64; ++i){
+            e = __state.json + __state.pos + i;
+            if((e >= __state.json + __state.len) || (*e == '\n')){
+                break;
+            }
+        }
+        int pos = __state.json + __state.pos - s;
+        err.append(s, e);
+        err.append("\n");
+        err.append(pos/2, ' ');
+        err.append(pos/2, '_');
+        err.append("^\n");
+        return err;
     }
 
     /* encode_utf8(pt, out)
@@ -346,7 +394,7 @@ public:
      * Parse a JSON object.
      */
     Json parse_json() {
-        if(__state.error != 0){
+        if(__state.error != JSON_ERROR_OK){
             return Json();
         }
         if (__state.depth > max_depth) {
@@ -435,7 +483,9 @@ public:
 Json Json::parse(const string &in, string &err) {
     JsonParser parser (in);
     Json result = parser.parse_json();
-
+    if(parser.isFailed()){
+        parser.failMsg(err);
+    }
     return result;
 }
 

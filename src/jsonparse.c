@@ -84,7 +84,7 @@ void jsonparse_setup(struct jsonparse_state *state, const char *json, int len) {
     state->vstart = 0;
     state->vlen = 0;
     state->vtype = 0;
-    state->error = 0;
+    state->error = JSON_ERROR_OK;
     state->stack[0] = 0;
 }
 /*--------------------------------------------------------------------*/
