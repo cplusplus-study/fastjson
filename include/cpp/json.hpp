@@ -134,7 +134,7 @@ protected:
     virtual Json::Type type() const = 0;
     virtual bool equals(const JsonValue * other) const = 0;
     virtual bool less(const JsonValue * other) const = 0;
-    //virtual void dump(std::string &out) const = 0;
+    virtual void dump(std::string &out) const = 0;
     virtual double number_value() const;
     virtual int int_value() const;
     virtual bool bool_value() const;

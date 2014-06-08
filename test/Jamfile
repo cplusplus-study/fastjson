@@ -3,4 +3,5 @@ project :
 			<include>../include
 			<cxxflags>-std=c++11
 		;
-exe test_parse : test_parse.cpp ../src//fastjson4c ../src//fastjson4cxx ../lib//gtest ;
+exe test_parse4c : c/test_parse.cpp ../src//fastjson4c ../src//fastjson4cxx ../lib//gtest ;
+exe test_parse4cxx : cpp/test_parse.cpp ../src//fastjson4c ../src//fastjson4cxx ../lib//gtest ;

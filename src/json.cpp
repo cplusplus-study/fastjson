@@ -18,6 +18,93 @@ using std::make_shared;
 using std::initializer_list;
 using std::move;
 
+static void dump(std::nullptr_t, string &out) {
+    out += "null";
+}
+
+static void dump(double value, string &out) {
+    char buf[32];
+    snprintf(buf, sizeof buf, "%.17g", value);
+    out += buf;
+}
+
+static void dump(int value, string &out) {
+    char buf[32];
+    snprintf(buf, sizeof buf, "%d", value);
+    out += buf;
+}
+
+static void dump(bool value, string &out) {
+    out += value ? "true" : "false";
+}
+
+static void dump(const string &value, string &out) {
+    out += '"';
+    for (size_t i = 0; i < value.length(); i++) {
+        const char ch = value[i];
+        if (ch == '\\') {
+            out += "\\\\";
+        } else if (ch == '"') {
+            out += "\\\"";
+        } else if (ch == '\b') {
+            out += "\\b";
+        } else if (ch == '\f') {
+            out += "\\f";
+        } else if (ch == '\n') {
+            out += "\\n";
+        } else if (ch == '\r') {
+            out += "\\r";
+        } else if (ch == '\t') {
+            out += "\\t";
+        } else if ((uint8_t)ch <= 0x1f) {
+            char buf[8];
+            snprintf(buf, sizeof buf, "\\u%04x", ch);
+            out += buf;
+        } else if ((uint8_t)ch == 0xe2 && (uint8_t)value[i+1] == 0x80
+                   && (uint8_t)value[i+2] == 0xa8) {
+            out += "\\u2028";
+            i += 2;
+        } else if ((uint8_t)ch == 0xe2 && (uint8_t)value[i+1] == 0x80
+                   && (uint8_t)value[i+2] == 0xa9) {
+            out += "\\u2029";
+            i += 2;
+        } else {
+            out += ch;
+        }
+    }
+    out += '"';
+}
+
+static void dump(const Json::array &values, string &out) {
+    bool first = true;
+    out += "[";
+    for (auto &value : values) {
+        if (!first)
+            out += ", ";
+        value.dump(out);
+        first = false;
+    }
+    out += "]";
+}
+
+static void dump(const Json::object &values, string &out) {
+    bool first = true;
+    out += "{";
+    for (const std::pair<string, Json> &kv : values) {
+        if (!first)
+            out += ", ";
+        dump(kv.first, out);
+        out += ": ";
+        kv.second.dump(out);
+        first = false;
+    }
+    out += "}";
+}
+
+void Json::dump(string &out) const {
+    m_ptr->dump(out);
+}
+
 /* * * * * * * * * * * * * * * * * * * *
  * Value wrappers
  */
@@ -44,7 +131,7 @@ protected:
     }
 
     const T m_value;
-    //void dump(string &out) const { xusd::dump(m_value, out); }
+    void dump(string &out) const { xusd::dump(m_value, out); }
 };
 
 class JsonDouble final : public Value<Json::NUMBER, double> {
@@ -203,6 +290,16 @@ public:
      */
     struct jsonparse_state __state;
 
+
+    bool isFailed(){
+        return __state.error != 0;
+    }
+
+    string failMsg(){
+
+        return "";
+    }
+
     /* encode_utf8(pt, out)
      *
      * Encode pt as UTF-8 and add it to out.
@@ -244,61 +341,100 @@ public:
         return std::atof(__state.json + __state.vstart);
     }
 
-    /* expect(str, res)
-     *
-     * Expect that 'str' starts at the character that was just read. If it does, advance
-     * the input and return res. If not, flag an error.
-     */
-    Json expect(const string &expected, Json res) {
-        //return fail("parse error: expected " + expected + ", got " + "");
-        return Json();
-    }
-
     /* parse_json()
      *
      * Parse a JSON object.
      */
-    Json parse_json(int depth) {
-        if (depth > max_depth) {
+    Json parse_json() {
+        if(__state.error != 0){
             return Json();
-            //return fail("exceeded maximum nesting depth");
+        }
+        if (__state.depth > max_depth) {
+            __state.error = JSON_ERROR_MAXDEPTH;
+            return Json();
         }
 
-        int n = jsonparse_next(&__state);
+        int n = 0;
+        if(__state.vtype == 0){
+            n = jsonparse_next(&__state);
+        } else {
+            n = __state.vtype;
+        }
         if(n == JSON_TYPE_ERROR){
-
             return Json();
-            //return fail("exceeded maximum nesting depth");
         }
 
         switch(n){
             case JSON_TYPE_NUMBER:
                 return parse_number();
             case JSON_TYPE_TRUE:
-                return expect("true", true);
+                return true;
             case JSON_TYPE_FALSE:
-                return expect("false", false);
+                return false;
             case JSON_TYPE_NULL:
-                return expect("null", nullptr);
+                return nullptr;
+            case JSON_TYPE_STRING:
+                return string(__state.json + __state.vstart, __state.vlen);
             case JSON_TYPE_OBJECT:
+                {
+                    map<string, Json> data;
+
+                    while(true){
+                        int ch = jsonparse_next(&__state);
+                        if(ch == JSON_TYPE_ERROR){
+                            return Json();
+                        }
+                        if(ch == '}'){
+                            break;
+                        }
+                        if(ch == ','){
+                            continue;
+                        }
+                        if(ch != JSON_TYPE_PAIR_NAME){
+                            __state.error = JSON_ERROR_UNEXPECTED_OBJECT;
+                            return Json();
+                        }
+                        string key(__state.json + __state.vstart, __state.vlen);
+                        ch = jsonparse_next(&__state);
+                        if(ch != ':'){
+                            __state.error = JSON_ERROR_UNEXPECTED_OBJECT;
+                            return Json();
+                        }
+                        data[key] = parse_json();
+                    }
+                    return data;
+                }
                 break;
             case JSON_TYPE_ARRAY:
+                {
+                    vector<Json> data;
+                    while(true){
+                        int ch = jsonparse_next(&__state);
+                        if(ch == JSON_TYPE_ERROR){
+                            return Json();
+                        }
+                        if(ch == ']'){
+                            break;
+                        }
+                        if(ch == ','){
+                            continue;
+                        }
+                        data.push_back(parse_json());
+                    }
+                    return data;
+                }
                 break;
             case JSON_TYPE_PAIR_NAME:
-                break;
-            case JSON_TYPE_PAIR:
-                break;
-            case ',':
+                return string(__state.json + __state.vstart, __state.vlen);
                 break;
         }
-
         return Json();
     }
 };
 
 Json Json::parse(const string &in, string &err) {
     JsonParser parser (in);
-    Json result = parser.parse_json(0);
+    Json result = parser.parse_json();
 
     return result;
 }
