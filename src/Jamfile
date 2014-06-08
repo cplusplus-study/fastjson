@@ -1,0 +1,7 @@
+project :
+		usage-requirements
+			<include>../include
+			<cflags>-std=c99
+		;
+
+lib fastjson : [ glob *.c ] : <cflags>-std=c99 ;

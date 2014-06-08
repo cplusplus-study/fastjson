@@ -1,0 +1,22 @@
+project 
+	:
+		requirements
+		<include>./include <threading>multi
+		<toolset>clang:<cxxflags>-fcolor-diagnostics
+	:
+		default-build
+		<link>static
+		<variant>release
+		<warnings>all
+	:
+		build-dir ./build
+	;
+
+install stage
+	: test
+	  src
+	: 
+	<variant>release:<location>./bin/release/
+	<variant>debug:<location>./bin/debug/
+	<install-dependencies>on <install-type>EXE <install-type>LIB
+	;

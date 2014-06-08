@@ -1,0 +1,1 @@
+exe test1 : test1.c ../src//fastjson ;
