@@ -386,7 +386,61 @@ public:
      * Parse a double.
      */
     Json parse_number() {
-        return std::atof(__state.json + __state.vstart);
+        size_t i = 0;
+        const char* str = __state.json + __state.vstart;
+
+        if (str[i] == '-')
+            i++;
+
+        // Integer part
+        if (str[i] == '0') {
+            i++;
+            if (str[i] >= '0' && str[i] <='9'){
+                __state.error = JSON_ERROR_SYNTAX;
+                return Json();
+            }
+        } else if (str[i] >= '1' && str[i] <='9') {
+            i++;
+            while (str[i] >= '0' && str[i] <='9')
+                i++;
+        } else {
+                __state.error = JSON_ERROR_SYNTAX;
+                return Json();
+        }
+
+        if (str[i] != '.' && str[i] != 'e' && str[i] != 'E'
+                && i <= (size_t)std::numeric_limits<int>::digits10) {
+            return std::atoi(str);
+        }
+
+        // Decimal part
+        if (str[i] == '.') {
+            i++;
+            if (!(str[i] >= '0' && str[i] <='9')){
+                __state.error = JSON_ERROR_SYNTAX;
+                return Json();
+            }
+
+            while (str[i] >= '0' && str[i] <='9'){ i++; }
+        }
+
+        // Exponent part
+        if (str[i] == 'e' || str[i] == 'E') {
+            i++;
+
+            if (str[i] == '+' || str[i] == '-')
+                i++;
+
+            if (!(str[i] >= '0' && str[i] <='9')){
+                __state.error = JSON_ERROR_SYNTAX;
+                return Json();
+            }
+
+            while (str[i] >= '0' && str[i] <='9')
+                i++;
+        }
+
+        return std::atof(str);
     }
 
     /* parse_json()
