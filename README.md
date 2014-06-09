@@ -1,4 +1,4 @@
-a fast json c/c++ lib.
+a fast json c/c++ lib. (请把好的想法, 以代码的形式提交到该项目, 共同学习, 共同维护.)
 
 ### 1. easy to use
 ```cpp
