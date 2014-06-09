@@ -1,24 +1,24 @@
 
-#ifndef JSONPARSE_H_
-#define JSONPARSE_H_
+#ifndef INCLUDE_C_JSONPARSE_H_
+#define INCLUDE_C_JSONPARSE_H_
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
-#include "json.h"
+#include "./json.h"
 
 
 struct jsonparse_state {
-  const char *json;
-  int pos;
-  int len;
-  int depth;
-  /* for handling atomic values */
-  int vstart;
-  int vlen;
-  char vtype;
-  char error;
-  char stack[JSONPARSE_MAX_DEPTH];
+    const char *json;
+    int pos;
+    int len;
+    int depth;
+    /* for handling atomic values */
+    int vstart;
+    int vlen;
+    char vtype;
+    char error;
+    char stack[JSONPARSE_MAX_DEPTH];
 };
 
 /**
@@ -57,4 +57,4 @@ int jsonparse_strcmp_value(struct jsonparse_state *state, const char *str);
 }
 #endif
 
-#endif /* JSONPARSE_H_ */
+#endif  // INCLUDE_C_JSONPARSE_H_

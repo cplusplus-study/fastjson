@@ -6,8 +6,12 @@
 #include <cstdlib>
 #include <cstdio>
 #include <limits>
+#include <utility>
+#include <map>
+#include <string>
+#include <vector>
 
-namespace xusd{
+namespace xusd {
 
 static const int max_depth = JSONPARSE_MAX_DEPTH;
 
@@ -112,7 +116,6 @@ void Json::dump(string &out) const {
 template <Json::Type tag, typename T>
 class Value : public JsonValue {
 protected:
-
     // Constructors
     Value(const T &value) : m_value(value) {}
     Value(T &&value)      : m_value(move(value)) {}
@@ -254,8 +257,11 @@ const Json & JsonObject::operator[] (const string &key) const {
     return (iter == m_value.end()) ? static_null() : iter->second;
 }
 const Json & JsonArray::operator[] (size_t i) const {
-    if (i >= m_value.size()) return static_null();
-    else return m_value[i];
+    if (i >= m_value.size()) {
+        return static_null();
+    } else {
+        return m_value[i];
+    }
 }
 
 /* * * * * * * * * * * * * * * * * * * *
@@ -282,8 +288,9 @@ bool Json::operator< (const Json &other) const {
  */
 class JsonParser {
     const std::string& json_str;
+
 public:
-    JsonParser(const std::string& in):json_str(in){
+    JsonParser(const std::string& in):json_str(in) {
         jsonparse_setup(&__state, json_str.data(), json_str.size());
     }
     /* State
@@ -291,13 +298,13 @@ public:
     struct jsonparse_state __state;
 
 
-    bool isFailed(){
+    bool isFailed() {
         return __state.error != JSON_ERROR_OK;
     }
 
-    string& failMsg(string &err){
+    string& failMsg(string &err) {
         err.clear();
-        switch(__state.error){
+        switch (__state.error) {
             case JSON_ERROR_OK:
                 break;
             case JSON_ERROR_SYNTAX:
@@ -321,21 +328,21 @@ public:
         }
 
         const char* s = __state.json + __state.pos;
-        const char* e = __state.pos + 64 < __state.len ? __state.json + __state.pos + 64: __state.json + __state.len;
-        for(int i =0; i<64; ++i){
+        const char* e = (__state.pos + 64) < __state.len ? (__state.json + __state.pos + 64) : (__state.json + __state.len);
+        for (int i =0; i < 64; ++i) {
             s = __state.json + __state.pos - i;
-            if((s <= __state.json)){
+            if ((s <= __state.json)) {
                 break;
             }
-            if(*s == '\n'){
-                if(__state.json + __state.pos - s > 32){
+            if (*s == '\n') {
+                if ((__state.json + __state.pos - s) > 32) {
                     break;
                 }
             }
         }
-        for(int i =0; i<64; ++i){
+        for (int i =0; i < 64; ++i) {
             e = __state.json + __state.pos + i;
-            if((e >= __state.json + __state.len) || (*e == '\n')){
+            if ((e >= __state.json + __state.len) || (*e == '\n')) {
                 break;
             }
         }
@@ -395,7 +402,7 @@ public:
         // Integer part
         if (str[i] == '0') {
             i++;
-            if (str[i] >= '0' && str[i] <='9'){
+            if (str[i] >= '0' && str[i] <='9') {
                 __state.error = JSON_ERROR_SYNTAX;
                 return Json();
             }
@@ -416,12 +423,12 @@ public:
         // Decimal part
         if (str[i] == '.') {
             i++;
-            if (!(str[i] >= '0' && str[i] <='9')){
+            if (!(str[i] >= '0' && str[i] <='9')) {
                 __state.error = JSON_ERROR_SYNTAX;
                 return Json();
             }
 
-            while (str[i] >= '0' && str[i] <='9'){ i++; }
+            while (str[i] >= '0' && str[i] <='9') { i++; }
         }
 
         // Exponent part
@@ -431,7 +438,7 @@ public:
             if (str[i] == '+' || str[i] == '-')
                 i++;
 
-            if (!(str[i] >= '0' && str[i] <='9')){
+            if (!(str[i] >= '0' && str[i] <= '9')) {
                 __state.error = JSON_ERROR_SYNTAX;
                 return Json();
             }
@@ -448,7 +455,7 @@ public:
      * Parse a JSON object.
      */
     Json parse_json() {
-        if(__state.error != JSON_ERROR_OK){
+        if (__state.error != JSON_ERROR_OK) {
             return Json();
         }
         if (__state.depth > max_depth) {
@@ -457,16 +464,16 @@ public:
         }
 
         int n = 0;
-        if(__state.vtype == 0){
+        if (__state.vtype == 0) {
             n = jsonparse_next(&__state);
         } else {
             n = __state.vtype;
         }
-        if(n == JSON_TYPE_ERROR){
+        if (n == JSON_TYPE_ERROR) {
             return Json();
         }
 
-        switch(n){
+        switch (n) {
             case JSON_TYPE_NUMBER:
                 return parse_number();
             case JSON_TYPE_TRUE:
@@ -481,24 +488,24 @@ public:
                 {
                     map<string, Json> data;
 
-                    while(true){
+                    while (true) {
                         int ch = jsonparse_next(&__state);
-                        if(ch == JSON_TYPE_ERROR){
+                        if (ch == JSON_TYPE_ERROR) {
                             return Json();
                         }
-                        if(ch == '}'){
+                        if (ch == '}') {
                             break;
                         }
-                        if(ch == ','){
+                        if (ch == ',') {
                             continue;
                         }
-                        if(ch != JSON_TYPE_PAIR_NAME){
+                        if (ch != JSON_TYPE_PAIR_NAME) {
                             __state.error = JSON_ERROR_UNEXPECTED_OBJECT;
                             return Json();
                         }
                         string key(__state.json + __state.vstart, __state.vlen);
                         ch = jsonparse_next(&__state);
-                        if(ch != ':'){
+                        if (ch != ':') {
                             __state.error = JSON_ERROR_UNEXPECTED_OBJECT;
                             return Json();
                         }
@@ -510,15 +517,15 @@ public:
             case JSON_TYPE_ARRAY:
                 {
                     vector<Json> data;
-                    while(true){
+                    while (true) {
                         int ch = jsonparse_next(&__state);
-                        if(ch == JSON_TYPE_ERROR){
+                        if (ch == JSON_TYPE_ERROR) {
                             return Json();
                         }
-                        if(ch == ']'){
+                        if (ch == ']') {
                             break;
                         }
-                        if(ch == ','){
+                        if (ch == ',') {
                             continue;
                         }
                         data.push_back(parse_json());
@@ -535,9 +542,9 @@ public:
 };
 
 Json Json::parse(const string &in, string &err) {
-    JsonParser parser (in);
+    JsonParser parser(in);
     Json result = parser.parse_json();
-    if(parser.isFailed()){
+    if (parser.isFailed()) {
         parser.failMsg(err);
     }
     return result;
@@ -557,4 +564,4 @@ bool Json::has_shape(const shape & types, string & err) const {
     return true;
 }
 
-}
+}  // namespace xusd

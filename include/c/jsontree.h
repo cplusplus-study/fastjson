@@ -2,14 +2,14 @@
  *  JSON output generation
  */
 
-#ifndef JSONTREE_H_
-#define JSONTREE_H_
+#ifndef INCLUDE_C_JSONTREE_H_
+#define INCLUDE_C_JSONTREE_H_
 
-#include "json.h"
+#include "./json.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #ifdef JSONTREE_CONF_MAX_DEPTH
@@ -21,7 +21,7 @@ extern "C"{
 struct jsontree_context {
   struct jsontree_value *values[JSONTREE_MAX_DEPTH];
   uint16_t index[JSONTREE_MAX_DEPTH];
-  int (* putchar)(int);
+  int (*putchar)(int);
   uint8_t depth;
   uint8_t path;
   int callback_state;
@@ -111,4 +111,5 @@ struct jsontree_value *jsontree_find_next(struct jsontree_context *js_ctx,
 #ifdef __cplusplus
 }
 #endif
-#endif /* JSONTREE_H_ */
+
+#endif  // INCLUDE_C_JSONTREE_H_

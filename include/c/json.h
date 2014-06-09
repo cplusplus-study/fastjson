@@ -2,22 +2,22 @@
  * A few JSON defines used for parsing and generating JSON.
  */
 
-#ifndef JSON_H_
-#define JSON_H_
+#ifndef INCLUDE_C_JSON_H_
+#define INCLUDE_C_JSON_H_
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #define JSON_TYPE_ARRAY '['
 #define JSON_TYPE_OBJECT '{'
 #define JSON_TYPE_PAIR ':'
-#define JSON_TYPE_PAIR_NAME 'N' /* for N:V pairs */
+#define JSON_TYPE_PAIR_NAME 'N'  // for N:V pairs
 #define JSON_TYPE_STRING '"'
 #define JSON_TYPE_INT 'I'
 #define JSON_TYPE_NUMBER '0'
 #define JSON_TYPE_ERROR 0
 
-/* how should we handle null vs false - both can be 0? */
+// how should we handle null vs false - both can be 0?
 #define JSON_TYPE_NULL 'n'
 #define JSON_TYPE_TRUE 't'
 #define JSON_TYPE_FALSE 'f'
@@ -41,4 +41,4 @@ enum {
 }
 #endif
 
-#endif /* JSON_H_ */
+#endif  // INCLUDE_C_JSON_H_
